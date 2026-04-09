@@ -1,8 +1,8 @@
-import { motion } from 'framer-motion';
-import { useChatStore, AvatarState } from '@/stores/chatStore';
+import { motion, type TargetAndTransition } from 'framer-motion';
+import { useChatStore, type AvatarState } from '@/stores/chatStore';
 import aanyaImg from '@/assets/aanya-avatar.png';
 
-const stateAnimations: Record<AvatarState, object> = {
+const stateAnimations: Record<AvatarState, TargetAndTransition> = {
   idle: { scale: [1, 1.02, 1], transition: { duration: 4, repeat: Infinity, ease: 'easeInOut' } },
   listening: { rotate: [0, -3, 3, 0], transition: { duration: 2, repeat: Infinity } },
   thinking: { opacity: [1, 0.7, 1], transition: { duration: 1.5, repeat: Infinity } },

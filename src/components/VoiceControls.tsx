@@ -16,7 +16,7 @@ export default function VoiceControls({ onTranscript, isSpeaking, onStopSpeaking
 
   const toggleListening = useCallback(() => {
     if (isListening) {
-      recognitionRef.current?.stop();
+      (recognitionRef.current as any)?.stop();
       setListening(false);
       setAvatarState('idle');
       return;
