@@ -14,7 +14,7 @@ const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/medtalk-chat
 
 export default function Chat() {
   const navigate = useNavigate();
-  const { messages, isLoading, addMessage, updateLastAssistant, setLoading, setAvatarState, clearMessages } = useChatStore();
+  const { messages, isLoading, language, setLanguage, addMessage, updateLastAssistant, setLoading, setAvatarState, clearMessages } = useChatStore();
   const [input, setInput] = useState('');
   const [isSpeaking, setIsSpeaking] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
