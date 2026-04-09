@@ -12,7 +12,7 @@ interface VoiceControlsProps {
 
 export default function VoiceControls({ onTranscript, isSpeaking, onStopSpeaking }: VoiceControlsProps) {
   const { isListening, setListening, setAvatarState } = useChatStore();
-  const recognitionRef = useRef<SpeechRecognition | null>(null);
+  const recognitionRef = useRef<any>(null);
 
   const toggleListening = useCallback(() => {
     if (isListening) {
