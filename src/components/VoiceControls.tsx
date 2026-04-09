@@ -11,8 +11,10 @@ interface VoiceControlsProps {
 }
 
 export default function VoiceControls({ onTranscript, isSpeaking, onStopSpeaking }: VoiceControlsProps) {
-  const { isListening, setListening, setAvatarState } = useChatStore();
+  const { isListening, setListening, setAvatarState, language } = useChatStore();
   const recognitionRef = useRef<any>(null);
+
+  const langMap: Record<string, string> = { en: 'en-IN', hi: 'hi-IN', mr: 'mr-IN' };
 
   const toggleListening = useCallback(() => {
     if (isListening) {
@@ -31,7 +33,7 @@ export default function VoiceControls({ onTranscript, isSpeaking, onStopSpeaking
     const recognition = new SpeechRecognition();
     recognition.continuous = false;
     recognition.interimResults = false;
-    recognition.lang = 'en-IN';
+    recognition.lang = langMap[language] || 'en-IN';
     recognitionRef.current = recognition;
 
     recognition.onstart = () => {
