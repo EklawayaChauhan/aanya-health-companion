@@ -24,17 +24,43 @@ export default function Chat() {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' });
   }, [messages]);
 
+  const detectLanguage = useCallback((text: string): string => {
+    const devanagariCount = (text.match(/[\u0900-\u097F]/g) || []).length;
+    const totalChars = text.replace(/\s/g, '').length;
+    if (totalChars === 0) return 'en-IN';
+    const devanagariRatio = devanagariCount / totalChars;
+    if (devanagariRatio > 0.3) {
+      // Distinguish Hindi vs Marathi by common Marathi-specific characters/words
+      const marathiMarkers = /[\u0960\u0961]|माझ|आहे|करा|तुम्ह|आम्ह|नाही|होत|असत|मला|तुला/;
+      return marathiMarkers.test(text) ? 'mr-IN' : 'hi-IN';
+    }
+    return 'en-IN';
+  }, []);
+
   const speak = useCallback((text: string) => {
     if (!window.speechSynthesis) return;
     window.speechSynthesis.cancel();
+
+    const lang = detectLanguage(text);
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.rate = 0.9;
-    utterance.lang = 'en-IN';
+    utterance.lang = lang;
+
+    // Try to find a matching voice for the detected language
+    const voices = window.speechSynthesis.getVoices();
+    const langPrefix = lang.split('-')[0]; // 'hi', 'mr', 'en'
+    const matchedVoice = voices.find(v => v.lang === lang) 
+      || voices.find(v => v.lang.startsWith(langPrefix))
+      || voices.find(v => v.lang.startsWith('hi') && lang === 'mr-IN'); // fallback Marathi to Hindi voice
+    if (matchedVoice) {
+      utterance.voice = matchedVoice;
+    }
+
     utterance.onstart = () => { setIsSpeaking(true); setAvatarState('speaking'); };
     utterance.onend = () => { setIsSpeaking(false); setAvatarState('idle'); };
     synthRef.current = utterance;
     window.speechSynthesis.speak(utterance);
-  }, [setAvatarState]);
+  }, [setAvatarState, detectLanguage]);
 
   const stopSpeaking = () => {
     window.speechSynthesis.cancel();
