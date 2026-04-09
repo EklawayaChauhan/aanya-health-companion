@@ -150,6 +150,21 @@ export default function Chat() {
             {isLoading ? 'Thinking...' : 'AI Health Companion'}
           </p>
         </div>
+        <div className="flex items-center gap-1">
+          {(['en', 'hi', 'mr'] as const).map((lang) => (
+            <button
+              key={lang}
+              onClick={() => setLanguage(lang)}
+              className={`px-2 py-1 text-xs rounded-lg transition-colors ${
+                language === lang
+                  ? 'bg-primary text-primary-foreground font-semibold'
+                  : 'text-muted-foreground hover:bg-muted'
+              }`}
+            >
+              {lang === 'en' ? 'EN' : lang === 'hi' ? 'हिं' : 'मरा'}
+            </button>
+          ))}
+        </div>
         <Button variant="ghost" size="icon" onClick={clearMessages} className="rounded-full">
           <Trash2 className="w-4 h-4" />
         </Button>
