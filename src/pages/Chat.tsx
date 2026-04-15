@@ -142,7 +142,7 @@ export default function Chat() {
       <div className="fixed inset-0 z-0">
         <Iridescence color={[0.3, 0.5, 0.5]} speed={0.4} amplitude={0.03} mouseReact={false} />
       </div>
-      <div className="absolute inset-0 z-[1] bg-background/60 backdrop-blur-sm" />
+      <div className="fixed inset-0 z-[1] bg-background/75 backdrop-blur-md" />
       {/* Header */}
       <header className="glass-card-strong border-b border-border/50 px-4 py-3 flex items-center gap-4 sticky top-0 z-20 relative">
         <Button variant="ghost" size="icon" onClick={() => navigate('/')} className="rounded-full">
