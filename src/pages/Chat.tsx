@@ -86,7 +86,7 @@ export default function Chat() {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
         },
-        body: JSON.stringify({ messages: allMsgs }),
+        body: JSON.stringify({ messages: allMsgs, language }),
       });
 
       if (!resp.ok || !resp.body) {
