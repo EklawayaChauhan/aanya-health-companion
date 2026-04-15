@@ -20,7 +20,7 @@ export default function Index() {
       <div className="fixed inset-0 z-0">
         <Iridescence color={[0.3, 0.6, 0.5]} speed={0.6} amplitude={0.05} mouseReact={false} />
       </div>
-      <div className="relative z-10">
+      <div className="relative z-10 bg-background/70 backdrop-blur-md min-h-screen">
       {/* Hero */}
       <section className="relative overflow-hidden">
         <div className="relative z-10 container mx-auto px-4 py-20 lg:py-32 flex flex-col lg:flex-row items-center gap-12">
