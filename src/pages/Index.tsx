@@ -3,7 +3,7 @@ import { ArrowRight, Heart, Shield, Globe, Mic } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import AanyaAvatar from '@/components/AanyaAvatar';
-import heroBg from '@/assets/hero-bg.jpg';
+import Iridescence from '@/components/Iridescence';
 
 const features = [
   { icon: Mic, title: 'Voice-First', desc: 'Talk naturally — Aanya listens, understands, and responds with care.' },
@@ -16,10 +16,13 @@ export default function Index() {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen gradient-bg">
+    <div className="min-h-screen relative">
+      <div className="fixed inset-0 z-0">
+        <Iridescence color={[0.3, 0.6, 0.5]} speed={0.6} amplitude={0.05} mouseReact={false} />
+      </div>
+      <div className="relative z-10">
       {/* Hero */}
       <section className="relative overflow-hidden">
-        <img src={heroBg} alt="" className="absolute inset-0 w-full h-full object-cover opacity-30" />
         <div className="relative z-10 container mx-auto px-4 py-20 lg:py-32 flex flex-col lg:flex-row items-center gap-12">
           <motion.div
             initial={{ opacity: 0, x: -30 }}
@@ -103,6 +106,7 @@ export default function Index() {
           <p className="text-xs text-muted-foreground">Helpline (India): iCall 9152987821</p>
         </div>
       </footer>
+      </div>
     </div>
   );
 }
