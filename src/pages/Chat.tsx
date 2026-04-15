@@ -176,7 +176,7 @@ export default function Chat() {
       </header>
 
       {/* Messages */}
-      <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-6 space-y-2">
+      <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-6 space-y-2 relative z-10">
         {messages.length === 0 && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -223,7 +223,7 @@ export default function Chat() {
       </div>
 
       {/* Input */}
-      <div className="glass-card-strong border-t border-border/50 px-4 py-4 sticky bottom-0 z-20">
+      <div className="glass-card-strong border-t border-border/50 px-4 py-4 sticky bottom-0 z-20 relative">
         <form onSubmit={handleSubmit} className="flex items-center gap-3">
           <VoiceControls onTranscript={sendMessage} isSpeaking={isSpeaking} onStopSpeaking={stopSpeaking} />
           <Input
