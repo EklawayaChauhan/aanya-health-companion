@@ -37,9 +37,12 @@ export default function Index() {
             <p className="text-lg text-muted-foreground mb-8 max-w-xl mx-auto lg:mx-0">
               An empathetic, voice-powered AI therapist that understands your symptoms, speaks your language, and guides you towards better health — safely.
             </p>
-            <div className="flex gap-4 justify-center lg:justify-start">
-              <Button onClick={() => navigate('/chat')} size="lg" className="gradient-btn px-8 py-6 text-base">
-                Start Talking <ArrowRight className="ml-2 w-5 h-5" />
+            <div className="flex flex-col sm:flex-row gap-3 justify-center lg:justify-start">
+              <Button onClick={() => navigate('/auth')} size="lg" className="gradient-btn px-8 py-6 text-base">
+                Get Started <ArrowRight className="ml-2 w-5 h-5" />
+              </Button>
+              <Button onClick={() => navigate('/chat')} size="lg" variant="outline" className="px-8 py-6 text-base">
+                Try Aanya
               </Button>
             </div>
             <p className="mt-4 text-xs text-muted-foreground">

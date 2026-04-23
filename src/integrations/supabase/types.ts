@@ -14,7 +14,84 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      homework: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          status: string
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          status?: string
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          status?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          achievements_count: number
+          avatar_url: string | null
+          beautiful_points: number
+          country: string | null
+          created_at: string
+          daily_streak: number
+          display_name: string | null
+          id: string
+          language_progress: number
+          level: number
+          updated_at: string
+          user_id: string
+          voice_speech_progress: number
+        }
+        Insert: {
+          achievements_count?: number
+          avatar_url?: string | null
+          beautiful_points?: number
+          country?: string | null
+          created_at?: string
+          daily_streak?: number
+          display_name?: string | null
+          id?: string
+          language_progress?: number
+          level?: number
+          updated_at?: string
+          user_id: string
+          voice_speech_progress?: number
+        }
+        Update: {
+          achievements_count?: number
+          avatar_url?: string | null
+          beautiful_points?: number
+          country?: string | null
+          created_at?: string
+          daily_streak?: number
+          display_name?: string | null
+          id?: string
+          language_progress?: number
+          level?: number
+          updated_at?: string
+          user_id?: string
+          voice_speech_progress?: number
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
