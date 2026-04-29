@@ -15,6 +15,8 @@ export default {
     extend: {
       fontFamily: {
         sans: ["'Plus Jakarta Sans'", "sans-serif"],
+        heading: ["'Instrument Serif'", "serif"],
+        body: ["'Barlow'", "sans-serif"],
       },
       colors: {
         border: "hsl(var(--border))",
