@@ -12,11 +12,11 @@ export default function ChatBubble({ message }: { message: Message }) {
       transition={{ duration: 0.3 }}
       className={`flex ${isUser ? 'justify-end' : 'justify-start'} mb-4`}
     >
-      <div className={`max-w-[80%] ${isUser ? 'chat-bubble-user' : 'chat-bubble-ai'}`}>
+      <div className={`max-w-[85%] sm:max-w-[75%] ${isUser ? 'chat-bubble-user-dark' : 'chat-bubble-ai-dark'}`}>
         {isUser ? (
-          <p className="text-sm leading-relaxed">{message.content}</p>
+          <p className="text-sm leading-relaxed whitespace-pre-wrap">{message.content}</p>
         ) : (
-          <div className="prose prose-sm max-w-none text-foreground">
+          <div className="prose prose-sm prose-invert max-w-none text-slate-100 prose-strong:text-white prose-headings:text-white prose-a:text-teal-300">
             <ReactMarkdown>{message.content}</ReactMarkdown>
           </div>
         )}
