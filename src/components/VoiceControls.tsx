@@ -4,6 +4,8 @@ import { motion } from 'framer-motion';
 import { useChatStore } from '@/stores/chatStore';
 import { Button } from '@/components/ui/button';
 
+import { langToBCP47, type LangCode } from '@/lib/speech';
+
 interface VoiceControlsProps {
   onTranscript: (text: string) => void;
   isSpeaking: boolean;
@@ -14,7 +16,7 @@ export default function VoiceControls({ onTranscript, isSpeaking, onStopSpeaking
   const { isListening, setListening, setAvatarState, language } = useChatStore();
   const recognitionRef = useRef<any>(null);
 
-  const langMap: Record<string, string> = { en: 'en-IN', hi: 'hi-IN', mr: 'mr-IN' };
+  const langMap = langToBCP47;
 
   const toggleListening = useCallback(() => {
     if (isListening) {
