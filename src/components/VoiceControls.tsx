@@ -35,7 +35,7 @@ export default function VoiceControls({ onTranscript, isSpeaking, onStopSpeaking
     const recognition = new SpeechRecognition();
     recognition.continuous = false;
     recognition.interimResults = false;
-    recognition.lang = langMap[language] || 'en-IN';
+    recognition.lang = langMap[language as LangCode] || 'en-IN';
     recognitionRef.current = recognition;
 
     recognition.onstart = () => {
