@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
-import { Send, ArrowLeft, Trash2, Globe } from 'lucide-react';
+import { Send, ArrowLeft, Trash2, Sparkles } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,8 +8,7 @@ import AanyaAvatar from '@/components/AanyaAvatar';
 import ChatBubble from '@/components/ChatBubble';
 import VoiceControls from '@/components/VoiceControls';
 import { useChatStore } from '@/stores/chatStore';
-import { supabase } from '@/integrations/supabase/client';
-import Iridescence from '@/components/Iridescence';
+import { configureUtterance, detectLang, loadVoices, type LangCode } from '@/lib/speech';
 
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/medtalk-chat`;
 
@@ -22,46 +21,26 @@ export default function Chat() {
   const synthRef = useRef<SpeechSynthesisUtterance | null>(null);
 
   useEffect(() => {
+    loadVoices();
+  }, []);
+
+  useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' });
   }, [messages]);
-
-  const detectLanguage = useCallback((text: string): string => {
-    const devanagariCount = (text.match(/[\u0900-\u097F]/g) || []).length;
-    const totalChars = text.replace(/\s/g, '').length;
-    if (totalChars === 0) return 'en-IN';
-    const devanagariRatio = devanagariCount / totalChars;
-    if (devanagariRatio > 0.3) {
-      // Distinguish Hindi vs Marathi by common Marathi-specific characters/words
-      const marathiMarkers = /[\u0960\u0961]|माझ|आहे|करा|तुम्ह|आम्ह|नाही|होत|असत|मला|तुला/;
-      return marathiMarkers.test(text) ? 'mr-IN' : 'hi-IN';
-    }
-    return 'en-IN';
-  }, []);
 
   const speak = useCallback((text: string) => {
     if (!window.speechSynthesis) return;
     window.speechSynthesis.cancel();
-
-    const lang = detectLanguage(text);
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.rate = 0.9;
-    utterance.lang = lang;
-
-    // Try to find a matching voice for the detected language
-    const voices = window.speechSynthesis.getVoices();
-    const langPrefix = lang.split('-')[0]; // 'hi', 'mr', 'en'
-    const matchedVoice = voices.find(v => v.lang === lang) 
-      || voices.find(v => v.lang.startsWith(langPrefix))
-      || voices.find(v => v.lang.startsWith('hi') && lang === 'mr-IN'); // fallback Marathi to Hindi voice
-    if (matchedVoice) {
-      utterance.voice = matchedVoice;
-    }
-
-    utterance.onstart = () => { setIsSpeaking(true); setAvatarState('speaking'); };
-    utterance.onend = () => { setIsSpeaking(false); setAvatarState('idle'); };
-    synthRef.current = utterance;
-    window.speechSynthesis.speak(utterance);
-  }, [setAvatarState, detectLanguage]);
+    // Detect from response text; fall back to selected language
+    const detected = detectLang(text);
+    const lang: LangCode = detected || (language as LangCode);
+    const utter = new SpeechSynthesisUtterance(text);
+    configureUtterance(utter, lang);
+    utter.onstart = () => { setIsSpeaking(true); setAvatarState('speaking'); };
+    utter.onend = () => { setIsSpeaking(false); setAvatarState('idle'); };
+    synthRef.current = utter;
+    window.speechSynthesis.speak(utter);
+  }, [language, setAvatarState]);
 
   const stopSpeaking = () => {
     window.speechSynthesis.cancel();
@@ -89,9 +68,7 @@ export default function Chat() {
         body: JSON.stringify({ messages: allMsgs, language }),
       });
 
-      if (!resp.ok || !resp.body) {
-        throw new Error(`Error: ${resp.status}`);
-      }
+      if (!resp.ok || !resp.body) throw new Error(`Error: ${resp.status}`);
 
       const reader = resp.body.getReader();
       const decoder = new TextDecoder();
@@ -130,112 +107,134 @@ export default function Chat() {
       setLoading(false);
       setAvatarState('idle');
     }
-  }, [messages, isLoading, addMessage, updateLastAssistant, setLoading, setAvatarState, speak]);
+  }, [messages, isLoading, addMessage, updateLastAssistant, setLoading, setAvatarState, speak, language]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     sendMessage(input);
   };
 
+  const suggestionsByLang: Record<string, string[]> = {
+    en: ['I have a headache', 'Feeling anxious', 'Trouble sleeping'],
+    hi: ['मुझे सिरदर्द है', 'मुझे चिंता हो रही है', 'मुझे बुखार है'],
+    mr: ['मला डोकेदुखी आहे', 'मला चिंता वाटतेय', 'मला झोप येत नाही'],
+  };
+
   return (
-    <div className="min-h-screen flex flex-col relative">
-      <div className="fixed inset-0 z-0">
-        <Iridescence color={[0.3, 0.5, 0.5]} speed={0.4} amplitude={0.03} mouseReact={false} />
+    <div className="min-h-screen flex flex-col relative chat-dark-bg text-slate-100">
+      {/* Animated aurora background */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
+        <div className="aurora-blob absolute -top-40 -left-40 w-[500px] h-[500px] rounded-full bg-teal-500/20" />
+        <div className="aurora-blob absolute top-1/3 -right-40 w-[600px] h-[600px] rounded-full bg-cyan-500/20" style={{ animationDelay: '6s' }} />
+        <div className="aurora-blob absolute bottom-0 left-1/3 w-[450px] h-[450px] rounded-full bg-emerald-500/15" style={{ animationDelay: '12s' }} />
+        <div className="absolute inset-0 chat-grid-overlay opacity-40" />
       </div>
-      <div className="fixed inset-0 z-[1] bg-background/75 backdrop-blur-md" />
+
       {/* Header */}
-      <header className="glass-card-strong border-b border-border/50 px-4 py-3 flex items-center gap-4 sticky top-0 z-20 relative">
-        <Button variant="ghost" size="icon" onClick={() => navigate('/')} className="rounded-full">
+      <header className="chat-glass-dark border-b border-white/5 px-3 sm:px-5 py-3 flex items-center gap-3 sm:gap-4 sticky top-0 z-20 rounded-none">
+        <Button variant="ghost" size="icon" onClick={() => navigate('/')} className="rounded-full text-slate-200 hover:bg-white/10 hover:text-white shrink-0">
           <ArrowLeft className="w-5 h-5" />
         </Button>
-        <AanyaAvatar size="sm" />
-        <div className="flex-1">
-          <h1 className="font-bold text-sm">Aanya</h1>
-          <p className="text-xs text-muted-foreground">
-            {isLoading ? 'Thinking...' : 'AI Health Companion'}
+        <div className="shrink-0">
+          <AanyaAvatar size="sm" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <h1 className="font-bold text-sm flex items-center gap-1.5 text-white">
+            Aanya <Sparkles className="w-3.5 h-3.5 text-teal-300" />
+          </h1>
+          <p className="text-xs text-slate-400 truncate">
+            {isLoading ? 'Thinking…' : 'AI Health Companion'}
           </p>
         </div>
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-1 chat-glass-dark rounded-full p-1">
           {(['en', 'hi', 'mr'] as const).map((lang) => (
             <button
               key={lang}
               onClick={() => setLanguage(lang)}
-              className={`px-2 py-1 text-xs rounded-lg transition-colors ${
-                language === lang
-                  ? 'bg-primary text-primary-foreground font-semibold'
-                  : 'text-muted-foreground hover:bg-muted'
+              className={`px-2.5 py-1 text-xs rounded-full transition-all font-medium ${
+                language === lang ? 'lang-pill-active' : 'text-slate-300 hover:text-white'
               }`}
             >
               {lang === 'en' ? 'EN' : lang === 'hi' ? 'हिं' : 'मरा'}
             </button>
           ))}
         </div>
-        <Button variant="ghost" size="icon" onClick={clearMessages} className="rounded-full">
+        <Button variant="ghost" size="icon" onClick={clearMessages} className="rounded-full text-slate-300 hover:bg-white/10 hover:text-white shrink-0">
           <Trash2 className="w-4 h-4" />
         </Button>
       </header>
 
       {/* Messages */}
-      <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-6 space-y-2 relative z-10">
-        {messages.length === 0 && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="flex flex-col items-center justify-center h-full text-center py-20"
-          >
-            <AanyaAvatar size="lg" />
-            <h2 className="text-xl font-bold mt-6 mb-2">Hello! I'm Aanya 👋</h2>
-            <p className="text-muted-foreground text-sm max-w-sm">
-              Your AI health companion. Tell me how you're feeling, and I'll try my best to help.
-            </p>
-            <p className="text-xs text-muted-foreground mt-4 max-w-xs">
-              ⚠️ I'm not a doctor. For emergencies, please call your local emergency number.
-            </p>
-            <div className="flex flex-wrap gap-2 mt-6 justify-center">
-              {['I have a headache', 'Feeling anxious', 'मुझे बुखार है'].map(q => (
-                <button
-                  key={q}
-                  onClick={() => sendMessage(q)}
-                  className="glass-card px-4 py-2 text-sm hover:bg-primary/5 transition-colors"
-                >
-                  {q}
-                </button>
-              ))}
-            </div>
-          </motion.div>
-        )}
+      <div ref={scrollRef} className="flex-1 overflow-y-auto px-3 sm:px-6 py-6 relative z-10">
+        <div className="max-w-3xl mx-auto space-y-2">
+          {messages.length === 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="flex flex-col items-center justify-center text-center py-12 sm:py-20"
+            >
+              <AanyaAvatar size="lg" />
+              <h2 className="text-2xl sm:text-3xl font-bold mt-6 mb-2 bg-gradient-to-r from-teal-300 to-cyan-300 bg-clip-text text-transparent">
+                Hello! I'm Aanya 👋
+              </h2>
+              <p className="text-slate-300 text-sm sm:text-base max-w-sm">
+                Your AI health companion. Tell me how you're feeling, and I'll do my best to help — in English, हिंदी, or मराठी.
+              </p>
+              <p className="text-xs text-slate-500 mt-4 max-w-xs">
+                ⚠️ I'm not a doctor. For emergencies, call 112 (India).
+              </p>
+              <div className="flex flex-wrap gap-2 mt-8 justify-center">
+                {(suggestionsByLang[language] || suggestionsByLang.en).map(q => (
+                  <motion.button
+                    key={q}
+                    whileHover={{ scale: 1.04 }}
+                    whileTap={{ scale: 0.97 }}
+                    onClick={() => sendMessage(q)}
+                    className="chat-chip"
+                  >
+                    {q}
+                  </motion.button>
+                ))}
+              </div>
+            </motion.div>
+          )}
 
-        {messages.map((msg) => (
-          <ChatBubble key={msg.id} message={msg} />
-        ))}
+          {messages.map((msg) => (
+            <ChatBubble key={msg.id} message={msg} />
+          ))}
 
-        {isLoading && messages[messages.length - 1]?.role !== 'assistant' && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="chat-bubble-ai inline-flex gap-1 items-center"
-          >
-            <span className="w-2 h-2 rounded-full bg-primary animate-bounce" style={{ animationDelay: '0ms' }} />
-            <span className="w-2 h-2 rounded-full bg-primary animate-bounce" style={{ animationDelay: '150ms' }} />
-            <span className="w-2 h-2 rounded-full bg-primary animate-bounce" style={{ animationDelay: '300ms' }} />
-          </motion.div>
-        )}
+          {isLoading && messages[messages.length - 1]?.role !== 'assistant' && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="chat-bubble-ai-dark inline-flex gap-1.5 items-center"
+            >
+              <span className="typing-dot w-2 h-2 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+              <span className="typing-dot w-2 h-2 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+              <span className="typing-dot w-2 h-2 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+            </motion.div>
+          )}
+        </div>
       </div>
 
       {/* Input */}
-      <div className="glass-card-strong border-t border-border/50 px-4 py-4 sticky bottom-0 z-20 relative">
-        <form onSubmit={handleSubmit} className="flex items-center gap-3">
+      <div className="chat-glass-dark border-t border-white/5 px-3 sm:px-6 py-4 sticky bottom-0 z-20 rounded-none">
+        <form onSubmit={handleSubmit} className="max-w-3xl mx-auto flex items-center gap-2 sm:gap-3">
           <VoiceControls onTranscript={sendMessage} isSpeaking={isSpeaking} onStopSpeaking={stopSpeaking} />
           <Input
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="Tell me how you're feeling..."
-            className="flex-1 rounded-xl bg-background/80"
+            placeholder={
+              language === 'hi' ? 'अपनी समस्या बताइए…'
+              : language === 'mr' ? 'तुम्हाला काय वाटतंय ते सांगा…'
+              : "Tell me how you're feeling…"
+            }
+            className="flex-1 rounded-full chat-input-dark h-12 px-5 text-base border-0 focus-visible:ring-0"
             disabled={isLoading}
           />
-          <motion.div whileTap={{ scale: 0.9 }}>
-            <Button type="submit" size="icon" disabled={isLoading || !input.trim()} className="rounded-full w-12 h-12 gradient-btn">
-              <Send className="w-5 h-5" />
+          <motion.div whileTap={{ scale: 0.92 }}>
+            <Button type="submit" size="icon" disabled={isLoading || !input.trim()} className="rounded-full w-12 h-12 send-btn-glow border-0 disabled:opacity-40 disabled:shadow-none">
+              <Send className="w-5 h-5 text-white" />
             </Button>
           </motion.div>
         </form>
